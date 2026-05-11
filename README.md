@@ -118,11 +118,11 @@ Exit codes: `0` clean · `1` findings at/above `--fail-on` · `2` config missing
 
 ## Kamal versions
 
-| kamal-lint | kamal |
-|---|---|
-| `0.1.x` | `>= 2.0`, `< 3.0` |
+| kamal-lint | kamal | tested against |
+|---|---|---|
+| `0.1.x` | `>= 2.0`, `< 3.0` | latest 2.x |
 
-`kamal-lint` reuses your installed Kamal's loader, so it auto-tracks whatever's in your `Gemfile.lock`. Override with `--kamal-version 2.5.0` for matrix runs.
+`kamal-lint` reuses your installed Kamal's loader, so it auto-tracks whatever's in your `Gemfile.lock`. Older 2.x versions likely work but aren't covered by CI — if you hit a bug on an older Kamal, please [open an issue](https://github.com/davafons/kamal-lint/issues). Override the detected version with `--kamal-version 2.5.0` for matrix runs.
 
 ## Development
 

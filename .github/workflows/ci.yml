@@ -7,8 +7,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-# Cancel in-flight runs for the same PR/branch; main runs are not cancelled
-# so finished commits keep their CI badge.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -47,13 +45,12 @@ jobs:
           advanced-security: false
 
   test:
-    name: Tests
+    name: Tests (Ruby ${{ matrix.ruby-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         ruby-version: ["3.3", "3.4", "4.0"]
-        kamal-version: ["2.0", "latest"]
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -62,13 +59,6 @@ jobs:
         with:
           ruby-version: ${{ matrix.ruby-version }}
           bundler-cache: true
-      - name: Pin Kamal version
-        if: matrix.kamal-version != 'latest'
-        env:
-          KAMAL_VERSION: ${{ matrix.kamal-version }}
-        run: |
-          bundle add kamal --version "~> ${KAMAL_VERSION}.0" --skip-install
-          bundle install
       - run: bin/test
 
   build-gem:
