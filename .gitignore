@@ -1,0 +1,7 @@
+.byebug_history
+*.gem
+coverage/*
+.DS_Store
+.kamal/secrets
+/pkg/
+/tmp/

@@ -1,0 +1,30 @@
+service: myapp
+image: registry.example.com/myorg/myapp
+servers:
+  web:
+    - 1.2.3.4
+  workers:
+    - 1.2.3.5
+registry:
+  server: registry.example.com
+  username:
+    - REGISTRY_USER
+  password:
+    - REGISTRY_PASS
+builder:
+  arch: amd64
+proxy:
+  ssl: true
+  host: example.com
+  app_port: 3000
+  healthcheck:
+    path: /up
+env:
+  clear:
+    LANG: en_US.UTF-8
+  secret:
+    - RAILS_MASTER_KEY
+accessories:
+  db:
+    image: postgres:16
+    host: 1.2.3.6

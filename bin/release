@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+version=$(ruby -r ./lib/kamal/lint/version -e 'print Kamal::Lint::VERSION')
+
+if [ -z "$version" ]; then
+  echo "❌ Could not read Kamal::Lint::VERSION" >&2
+  exit 1
+fi
+
+tag="v${version}"
+
+if git rev-parse "$tag" >/dev/null 2>&1; then
+  echo "❌ Tag $tag already exists" >&2
+  exit 1
+fi
+
+if [ -n "$(git status --porcelain)" ]; then
+  echo "❌ Working tree is dirty. Commit or stash first." >&2
+  exit 1
+fi
+
+echo "→ Running tests"
+bin/test
+
+echo "→ Running rubocop"
+BUNDLE_ONLY=rubocop bundle exec rubocop --parallel
+
+echo "→ Building gem locally to sanity-check"
+gem build kamal-lint.gemspec
+
+echo
+echo "✓ Ready to tag $tag"
+echo "  Next step (manual): git tag -a $tag -m \"Release $tag\" && git push origin $tag"
+echo "  The Release workflow will publish to RubyGems via OIDC trusted publishing."

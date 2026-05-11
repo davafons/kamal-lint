@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rubocop:
+    name: RuboCop
+    runs-on: ubuntu-latest
+    env:
+      BUNDLE_ONLY: rubocop
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - run: bundle exec rubocop --parallel
+
+  lint-actions:
+    name: GitHub Actions audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Run actionlint
+        uses: rhysd/actionlint@v1.7.11
+      - name: Run zizmor
+        uses: zizmorcore/zizmor-action@v0.5.2
+        with:
+          advanced-security: false
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby-version: ["3.2", "3.3", "3.4", "4.0"]
+        kamal-version: ["2.0", "latest"]
+        exclude:
+          - ruby-version: "3.2"
+            kamal-version: "latest"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler-cache: true
+      - name: Pin Kamal version
+        if: matrix.kamal-version != 'latest'
+        env:
+          KAMAL_VERSION: ${{ matrix.kamal-version }}
+        run: |
+          bundle add kamal --version "~> ${KAMAL_VERSION}.0" --skip-install
+          bundle install
+      - run: bin/test
+
+  build-gem:
+    name: gem build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+      - run: gem build kamal-lint.gemspec
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kamal-lint-gem
+          path: "*.gem"
+          if-no-files-found: error

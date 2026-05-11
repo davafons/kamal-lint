@@ -1,0 +1,41 @@
+name: Bug report
+description: Something kamal-lint reported wrong (false positive / false negative / crash)
+labels: ["bug"]
+body:
+  - type: input
+    id: kamal-lint-version
+    attributes:
+      label: kamal-lint version
+      description: Output of `kamal-lint version`
+      placeholder: "kamal-lint 0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: kamal-version
+    attributes:
+      label: Kamal version
+      description: Output of `kamal version`
+      placeholder: "2.11.0"
+    validations:
+      required: true
+  - type: textarea
+    id: deploy-yml
+    attributes:
+      label: Minimal config/deploy.yml
+      description: Smallest YAML that reproduces the issue.
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the full `kamal-lint` output if relevant.
+    validations:
+      required: true

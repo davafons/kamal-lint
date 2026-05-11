@@ -1,0 +1,46 @@
+name: New check proposal
+description: Propose a new lint rule for a Kamal misconfiguration kamal-lint should catch
+labels: ["enhancement", "new-check"]
+body:
+  - type: textarea
+    id: footgun
+    attributes:
+      label: What's the footgun?
+      description: Describe the misconfiguration in plain English. What breaks when this happens?
+    validations:
+      required: true
+  - type: textarea
+    id: example
+    attributes:
+      label: Minimal example deploy.yml
+      description: YAML snippet that exhibits the issue.
+      render: yaml
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Suggested severity
+      options:
+        - error
+        - warning
+        - info
+    validations:
+      required: true
+  - type: dropdown
+    id: autofixable
+    attributes:
+      label: Could this be autofixed safely?
+      options:
+        - "Yes — safe to rewrite automatically"
+        - "Maybe — needs user confirmation"
+        - "No — too risky to autofix"
+    validations:
+      required: true
+  - type: textarea
+    id: caught-by-kamal
+    attributes:
+      label: Does `kamal config` already catch this?
+      description: If yes, kamal-lint probably shouldn't duplicate it.
+    validations:
+      required: true

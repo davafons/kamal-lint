@@ -1,0 +1,61 @@
+name: kamal-lint
+description: Lint Kamal config/deploy.yml in GitHub Actions
+author: David Afonso
+branding:
+  icon: anchor
+  color: blue
+
+inputs:
+  config-file:
+    description: Path to the Kamal deploy.yml
+    required: false
+    default: config/deploy.yml
+  destination:
+    description: Destination override (e.g. production, staging)
+    required: false
+    default: ""
+  fail-on:
+    description: Minimum severity that causes a non-zero exit code (error, warning, info)
+    required: false
+    default: warning
+  fix:
+    description: Apply safe autofixes in-place (true/false)
+    required: false
+    default: "false"
+  kamal-version:
+    description: Override detected Kamal version
+    required: false
+    default: ""
+  working-directory:
+    description: Working directory to run from
+    required: false
+    default: "."
+
+runs:
+  using: composite
+  steps:
+    - name: Run kamal-lint
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        KL_CONFIG_FILE: ${{ inputs.config-file }}
+        KL_DESTINATION: ${{ inputs.destination }}
+        KL_FAIL_ON: ${{ inputs.fail-on }}
+        KL_FIX: ${{ inputs.fix }}
+        KL_KAMAL_VERSION: ${{ inputs.kamal-version }}
+      run: |
+        set -euo pipefail
+        ARGS=(--format=github --fail-on "$KL_FAIL_ON")
+        if [ -n "$KL_CONFIG_FILE" ]; then
+          ARGS+=(--config-file "$KL_CONFIG_FILE")
+        fi
+        if [ -n "$KL_DESTINATION" ]; then
+          ARGS+=(--destination "$KL_DESTINATION")
+        fi
+        if [ -n "$KL_KAMAL_VERSION" ]; then
+          ARGS+=(--kamal-version "$KL_KAMAL_VERSION")
+        fi
+        if [ "$KL_FIX" = "true" ]; then
+          ARGS+=(--fix)
+        fi
+        bundle exec kamal-lint "${ARGS[@]}"
