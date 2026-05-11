@@ -78,9 +78,12 @@ jobs:
           done
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
-        with:
-          name: v${{ steps.build.outputs.version }}
-          body: ${{ steps.changelog.outputs.body }}
-          files: pkg/*.gem
-          fail_on_unmatched_files: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.build.outputs.version }}
+          BODY: ${{ steps.changelog.outputs.body }}
+        run: |
+          set -euo pipefail
+          gh release create "v${VERSION}" pkg/*.gem \
+            --title "v${VERSION}" \
+            --notes "$BODY"
