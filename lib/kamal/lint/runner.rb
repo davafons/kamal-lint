@@ -59,34 +59,15 @@ module Kamal
         Loader.load(
           config_file: @config_file,
           destination: @destination,
-          kamal_version: @kamal_version_override
+          kamal_version: @kamal_version_override,
+          include_kamal_errors: @include_kamal_errors
         )
       end
 
       def collect_findings(context)
-        findings = []
-
-        if @include_kamal_errors && context.kamal_load_error
-          findings << kamal_parse_error_finding(context)
+        @registry.applicable_to(context.kamal_version).flat_map do |check_class|
+          Array(check_class.new(context).call)
         end
-
-        @registry.applicable_to(context.kamal_version).each do |check_class|
-          findings.concat(Array(check_class.new(context).call))
-        end
-
-        findings
-      end
-
-      def kamal_parse_error_finding(context)
-        Finding.new(
-          check_id: "kamal-parse-error",
-          severity: :error,
-          message: "kamal could not load this config: #{context.kamal_load_error.message}",
-          file: context.file_for_finding,
-          line: 1,
-          column: 1,
-          autofix: nil
-        )
       end
 
       def apply_autofixes(findings, context)

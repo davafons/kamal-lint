@@ -21,6 +21,7 @@ module Kamal
       :kamal_version,
       :kamal_loaded,
       :kamal_load_error,
+      :include_kamal_errors,
       keyword_init: true
     ) do
       def file_for_finding
@@ -42,7 +43,7 @@ module Kamal
     module Loader
       module_function
 
-      def load(config_file:, destination: nil, kamal_version: nil)
+      def load(config_file:, destination: nil, kamal_version: nil, include_kamal_errors: false)
         raise ConfigNotFoundError, "Config file not found: #{config_file}" unless File.exist?(config_file)
 
         working_dir = derive_working_dir(config_file)
@@ -63,7 +64,8 @@ module Kamal
           gitignore_path: File.join(working_dir, ".gitignore"),
           kamal_version: kamal_version || KamalVersion.detect,
           kamal_loaded: kamal_loaded,
-          kamal_load_error: kamal_load_error
+          kamal_load_error: kamal_load_error,
+          include_kamal_errors: include_kamal_errors
         )
       end
 

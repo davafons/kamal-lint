@@ -28,8 +28,31 @@ bin/test
 echo "→ Running rubocop"
 BUNDLE_ONLY=rubocop bundle exec rubocop --parallel
 
-echo "→ Building gem locally to sanity-check"
-gem build kamal-lint.gemspec
+echo "→ Building gem locally"
+mkdir -p pkg
+gem build kamal-lint.gemspec --output "pkg/kamal-lint-${version}.gem"
+
+echo "→ Verifying the built gem installs and exec works"
+sandbox="$(mktemp -d)"
+trap 'rm -rf "$sandbox"' EXIT
+
+gem install "pkg/kamal-lint-${version}.gem" \
+  --install-dir "$sandbox" \
+  --no-document \
+  --bindir "$sandbox/bin" \
+  >/dev/null
+
+actual_version=$(GEM_HOME="$sandbox" GEM_PATH="$sandbox" "$sandbox/bin/kamal-lint" version | awk '{print $NF}')
+if [ "$actual_version" != "$version" ]; then
+  echo "❌ Installed gem reports version '$actual_version', expected '$version'" >&2
+  exit 1
+fi
+
+actual_checks=$(GEM_HOME="$sandbox" GEM_PATH="$sandbox" "$sandbox/bin/kamal-lint" list-checks | grep -c '^[a-z][a-z0-9-]*  *')
+if [ "$actual_checks" -lt 17 ]; then
+  echo "❌ Installed gem only reports $actual_checks checks; expected ≥17" >&2
+  exit 1
+fi
 
 echo
 echo "✓ Ready to tag $tag"

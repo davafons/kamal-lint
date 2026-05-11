@@ -59,5 +59,6 @@ require_relative "lint/checks/secret_in_env_clear"
 require_relative "lint/checks/missing_proxy_healthcheck"
 require_relative "lint/checks/accessory_image_latest"
 require_relative "lint/checks/registry_without_explicit_server"
+require_relative "lint/checks/kamal_parse_error"
 
 require_relative "lint/cli"

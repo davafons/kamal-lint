@@ -44,6 +44,6 @@ class RegistryTest < ActiveSupport::TestCase
     assert_includes ids, "secret-not-declared"
     assert_includes ids, "traefik-legacy-keys"
     assert_includes ids, "missing-service-name"
-    assert ids.size >= 16, "expected ≥16 built-in checks, got #{ids.size}"
+    assert ids.size >= 17, "expected ≥17 built-in checks, got #{ids.size}"
   end
 end

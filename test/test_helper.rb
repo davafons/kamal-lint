@@ -83,7 +83,8 @@ class ActiveSupport::TestCase
       gitignore_path: "",
       kamal_version: "2.11.0",
       kamal_loaded: true,
-      kamal_load_error: nil
+      kamal_load_error: nil,
+      include_kamal_errors: false
     }
     Kamal::Lint::Context.new(**defaults.merge(overrides))
   end

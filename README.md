@@ -7,7 +7,7 @@
   <a href="https://rubygems.org/gems/kamal-lint"><img src="https://img.shields.io/gem/dt/kamal-lint" alt="Downloads"></a>
 </p>
 
-Static linter for [Kamal](https://kamal-deploy.org) `config/deploy.yml`. Catches what Kamal silently allows.
+Static linter for [Kamal](https://kamal-deploy.org) `config/deploy.yml`. Catches missing secrets, role/registry mismatches, and proxy footguns that Kamal silently allows.
 
 ```
 $ bundle exec kamal-lint
@@ -58,6 +58,7 @@ bundle exec kamal-lint
 | `missing-proxy-healthcheck` | warning | |
 | `accessory-image-latest` | warning | |
 | `registry-without-explicit-server` | warning | |
+| `kamal-parse-error` | error | |  *(opt-in via `--include-kamal-errors`)* |
 
 `kamal-lint list-checks` shows the full table including `since:` version.
 
