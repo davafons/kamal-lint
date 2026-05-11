@@ -49,16 +49,6 @@ module Kamal
           render_summary(result)
         end
 
-        def render_fix_summary(result)
-          return if result.fixed.empty?
-
-          @io.puts
-          @io.puts c(:bold, "Applied autofixes:")
-          result.fixed.each do |finding|
-            @io.puts "  #{c(:green, "✓")} [#{finding.check_id}] #{finding.message}"
-          end
-        end
-
         private
 
         def render_header(result)
@@ -77,9 +67,8 @@ module Kamal
           glyph = SEVERITY_GLYPH[finding.severity] || "?"
           color = SEVERITY_COLOR[finding.severity] || :gray
           sev = finding.severity.to_s.ljust(7)
-          fix_hint = finding.autofixable? ? c(:dim, " (autofixable)") : ""
 
-          @io.puts "#{c(color, glyph)} #{c(:bold, sev)} #{c(:gray, loc)}#{fix_hint}"
+          @io.puts "#{c(color, glyph)} #{c(:bold, sev)} #{c(:gray, loc)}"
           @io.puts "    #{finding.message}"
           @io.puts "    #{c(:dim, "[#{finding.check_id}]")}"
           @io.puts
@@ -89,13 +78,11 @@ module Kamal
           errors = result.errors.size
           warnings = result.warnings.size
           infos = result.infos.size
-          autofixable = result.findings.count(&:autofixable?)
 
           parts = []
           parts << "#{c(:red, errors.to_s)} error#{plural(errors)}" if errors > 0
           parts << "#{c(:yellow, warnings.to_s)} warning#{plural(warnings)}" if warnings > 0
           parts << "#{c(:blue, infos.to_s)} info" if infos > 0
-          parts << "#{c(:dim, "#{autofixable} autofixable")}" if autofixable > 0
 
           @io.puts c(:bold, "Summary: ") + parts.join(", ")
         end

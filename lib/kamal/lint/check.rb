@@ -34,12 +34,6 @@ module Kamal
           @until_version
         end
 
-        # Mark this check as autofix-capable in the registry listing.
-        def autofixable(value = nil)
-          @autofixable = value unless value.nil?
-          @autofixable || false
-        end
-
         def applies_to?(kamal_version)
           return true if kamal_version.nil?
 
@@ -66,15 +60,14 @@ module Kamal
 
       private
 
-      def finding(message:, line: nil, column: nil, autofix: nil)
+      def finding(message:, line: nil, column: nil)
         Finding.new(
           check_id: self.class.id,
           severity: self.class.severity,
           message: message,
           file: context.file_for_finding,
           line: line,
-          column: column,
-          autofix: autofix
+          column: column
         )
       end
 

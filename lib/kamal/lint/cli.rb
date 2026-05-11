@@ -20,8 +20,6 @@ module Kamal
       class_option :fail_on, type: :string, default: "warning",
         enum: %w[error warning info],
         desc: "Minimum severity that causes a non-zero exit code"
-      class_option :fix, type: :boolean, default: false,
-        desc: "Apply safe autofixes in-place"
       class_option :"kamal-version", type: :string,
         desc: "Override detected Kamal version"
       class_option :"include-kamal-errors", type: :boolean, default: false,
@@ -35,13 +33,11 @@ module Kamal
           config_file: options[:config_file],
           destination: options[:destination],
           kamal_version: options[:"kamal-version"],
-          fix: options[:fix],
           include_kamal_errors: options[:"include-kamal-errors"]
         )
         result = runner.call
         formatter = build_formatter(options[:format], options[:no_color])
         formatter.render(result)
-        formatter.render_fix_summary(result) if options[:fix]
         exit(result.exit_code(fail_on: options[:fail_on].to_sym))
       rescue ConfigNotFoundError => e
         warn "kamal-lint: #{e.message}"
@@ -63,8 +59,7 @@ module Kamal
               severity: check.severity.to_s,
               title: check.title,
               since: check.since,
-              until_version: check.until_version,
-              autofixable: check.autofixable
+              until_version: check.until_version
             }
           end
           puts JSON.pretty_generate(payload)
@@ -72,14 +67,12 @@ module Kamal
           puts "#{"ID".ljust(38)} #{"SEVERITY".ljust(9)} #{"SINCE".ljust(8)} TITLE"
           puts "-" * 110
           registry.all.each do |check|
-            line = [
+            puts [
               check.id.to_s.ljust(38),
               check.severity.to_s.ljust(9),
               (check.since || "—").to_s.ljust(8),
               check.title.to_s
             ].join(" ")
-            line += " (autofixable)" if check.autofixable
-            puts line
           end
           puts
           puts "Total: #{registry.all.size} checks"

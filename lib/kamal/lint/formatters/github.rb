@@ -32,14 +32,6 @@ module Kamal
           end
         end
 
-        def render_fix_summary(result)
-          return if result.fixed.empty?
-
-          result.fixed.each do |finding|
-            @io.puts "::notice file=#{finding.file},title=kamal-lint autofix::Fixed #{finding.check_id}"
-          end
-        end
-
         private
 
         def escape_message(value)

@@ -20,17 +20,10 @@ module Kamal
             summary: {
               errors: result.errors.size,
               warnings: result.warnings.size,
-              infos: result.infos.size,
-              autofixable: result.findings.count(&:autofixable?)
+              infos: result.infos.size
             }
           }
           @io.puts JSON.pretty_generate(payload)
-        end
-
-        def render_fix_summary(result)
-          return if result.fixed.empty?
-
-          @io.puts JSON.pretty_generate(fixed: result.fixed.map(&:to_h))
         end
       end
     end

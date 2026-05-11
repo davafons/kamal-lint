@@ -9,9 +9,9 @@ class JsonFormatterTest < ActiveSupport::TestCase
     ctx = build_context(destination: "production")
     findings = [ Kamal::Lint::Finding.new(
       check_id: "x", severity: :error, message: "m",
-      file: "f", line: 1, column: 2, autofix: nil
+      file: "f", line: 1, column: 2
     ) ]
-    result = Kamal::Lint::Result.new(findings: findings, context: ctx, fixed: [])
+    result = Kamal::Lint::Result.new(findings: findings, context: ctx)
     formatter.render(result)
     payload = JSON.parse(io.string)
 
@@ -19,6 +19,6 @@ class JsonFormatterTest < ActiveSupport::TestCase
     assert_equal "2.11.0", payload["kamal_version"]
     assert_equal "production", payload["destination"]
     assert_equal 1, payload["findings"].size
-    assert_equal({ "errors" => 1, "warnings" => 0, "infos" => 0, "autofixable" => 0 }, payload["summary"])
+    assert_equal({ "errors" => 1, "warnings" => 0, "infos" => 0 }, payload["summary"])
   end
 end

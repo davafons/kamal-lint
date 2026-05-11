@@ -9,13 +9,8 @@ module Kamal
       :file,
       :line,
       :column,
-      :autofix,
       keyword_init: true
     ) do
-      def autofixable?
-        !autofix.nil?
-      end
-
       def to_h
         {
           check: check_id,
@@ -23,8 +18,7 @@ module Kamal
           message: message,
           file: file,
           line: line,
-          column: column,
-          autofixable: autofixable?
+          column: column
         }
       end
     end

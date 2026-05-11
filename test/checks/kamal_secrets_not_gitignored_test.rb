@@ -29,15 +29,4 @@ class KamalSecretsNotGitignoredTest < ActiveSupport::TestCase
     )
     assert_empty findings
   end
-
-  def test_autofix_appends_to_gitignore
-    run_runner(
-      yaml: "service: a\nimage: i\nservers:\n  - 1.2.3.4\n",
-      secrets: "K=v\n",
-      gitignore: "/tmp/\n",
-      fix: true
-    ) do
-      assert_includes File.read(".gitignore"), ".kamal/secrets"
-    end
-  end
 end

@@ -54,14 +54,14 @@ class ActiveSupport::TestCase
     findings
   end
 
-  def run_runner(yaml:, secrets: nil, gitignore: nil, fix: false, destination: nil)
+  def run_runner(yaml:, secrets: nil, gitignore: nil, destination: nil, include_kamal_errors: false)
     result = nil
     with_project(yaml: yaml, secrets: secrets, gitignore: gitignore) do
       runner = Kamal::Lint::Runner.new(
         config_file: "config/deploy.yml",
         destination: destination,
         kamal_version: "2.11.0",
-        fix: fix
+        include_kamal_errors: include_kamal_errors
       )
       result = runner.call
       yield result if block_given?

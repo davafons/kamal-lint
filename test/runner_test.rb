@@ -73,26 +73,4 @@ class RunnerTest < ActiveSupport::TestCase
     refute_includes result.findings.map(&:check_id), "kamal-parse-error"
   end
 
-  def test_applies_autofixes
-    result = run_runner(
-      yaml: <<~YAML,
-        image: i
-        servers:
-          - 1.2.3.4
-        traefik:
-          host: app.example.com
-      YAML
-      secrets: "",
-      gitignore: ".kamal/secrets\n",
-      fix: true
-    ) do
-      content = YAML.safe_load_file("config/deploy.yml")
-      refute content.key?("traefik")
-      assert_equal "app.example.com", content["proxy"]["host"]
-      assert_kind_of String, content["service"]
-    end
-    ids = result.fixed.map(&:check_id)
-    assert_includes ids, "traefik-legacy-keys"
-    assert_includes ids, "missing-service-name"
-  end
 end

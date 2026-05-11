@@ -2,7 +2,7 @@
 
 module Kamal
   module Lint
-    Result = Struct.new(:findings, :context, :fixed, keyword_init: true) do
+    Result = Struct.new(:findings, :context, keyword_init: true) do
       def errors
         findings.select { |f| f.severity == :error }
       end
@@ -30,53 +30,25 @@ module Kamal
 
     class Runner
       def initialize(config_file:, destination: nil, kamal_version: nil,
-        registry: Lint.registry, fix: false, include_kamal_errors: false)
+        registry: Lint.registry, include_kamal_errors: false)
         @config_file = config_file
         @destination = destination
         @kamal_version_override = kamal_version
         @registry = registry
-        @fix = fix
         @include_kamal_errors = include_kamal_errors
       end
 
       def call
-        context = load_context
-        findings = collect_findings(context)
-
-        fixed = @fix ? apply_autofixes(findings, context) : []
-
-        if @fix && !fixed.empty?
-          context = load_context
-          findings = collect_findings(context)
-        end
-
-        Result.new(findings: findings, context: context, fixed: fixed)
-      end
-
-      private
-
-      def load_context
-        Loader.load(
+        context = Loader.load(
           config_file: @config_file,
           destination: @destination,
           kamal_version: @kamal_version_override,
           include_kamal_errors: @include_kamal_errors
         )
-      end
-
-      def collect_findings(context)
-        @registry.applicable_to(context.kamal_version).flat_map do |check_class|
+        findings = @registry.applicable_to(context.kamal_version).flat_map do |check_class|
           Array(check_class.new(context).call)
         end
-      end
-
-      def apply_autofixes(findings, context)
-        applied = []
-        findings.select(&:autofixable?).each do |finding|
-          ok = finding.autofix.call(context)
-          applied << finding if ok
-        end
-        applied
+        Result.new(findings: findings, context: context)
       end
     end
   end

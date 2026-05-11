@@ -12,13 +12,13 @@ class GithubFormatterTest < ActiveSupport::TestCase
   def test_emits_workflow_commands_per_severity
     findings = [
       Kamal::Lint::Finding.new(check_id: "e", severity: :error, message: "boom",
-        file: "config/deploy.yml", line: 4, column: 1, autofix: nil),
+        file: "config/deploy.yml", line: 4, column: 1),
       Kamal::Lint::Finding.new(check_id: "w", severity: :warning, message: "hmm",
-        file: "config/deploy.yml", line: 7, column: 1, autofix: nil),
+        file: "config/deploy.yml", line: 7, column: 1),
       Kamal::Lint::Finding.new(check_id: "i", severity: :info, message: "fyi",
-        file: "config/deploy.yml", line: 9, column: 1, autofix: nil)
+        file: "config/deploy.yml", line: 9, column: 1)
     ]
-    result = Kamal::Lint::Result.new(findings: findings, context: @ctx, fixed: [])
+    result = Kamal::Lint::Result.new(findings: findings, context: @ctx)
     @formatter.render(result)
     out = @io.string
 
@@ -30,9 +30,9 @@ class GithubFormatterTest < ActiveSupport::TestCase
   def test_escapes_message_chars
     finding = Kamal::Lint::Finding.new(
       check_id: "x", severity: :error, message: "a%b\nc\rd",
-      file: "f", line: 1, column: 1, autofix: nil
+      file: "f", line: 1, column: 1
     )
-    result = Kamal::Lint::Result.new(findings: [ finding ], context: @ctx, fixed: [])
+    result = Kamal::Lint::Result.new(findings: [ finding ], context: @ctx)
     @formatter.render(result)
     assert_includes @io.string, "a%25b%0Ac%0Dd"
   end
