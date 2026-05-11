@@ -72,5 +72,4 @@ class RunnerTest < ActiveSupport::TestCase
     end
     refute_includes result.findings.map(&:check_id), "kamal-parse-error"
   end
-
 end
