@@ -16,7 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Internal
 - Renamed `LICENSE` → `MIT-LICENSE` to match Kamal's convention.
 - Added `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `.ruby-version`, `bin/release`.
-- Added `Release` and `Edge` GitHub Actions workflows for tag-triggered and main-branch pre-release publishing via RubyGems trusted publishing (OIDC).
+- Added `Release` GitHub Actions workflow for tag-triggered publishing via RubyGems trusted publishing (OIDC).
+- Added `actionlint` and `zizmor` workflow security audits in CI.
+- Added `dependabot.yml` for weekly bundler + GitHub Actions updates.
+- Added PR template and issue templates (bug report, new check proposal).
 
 ## [0.1.0] - 2026-05-11
 
