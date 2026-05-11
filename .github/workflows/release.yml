@@ -15,14 +15,18 @@ jobs:
       contents: write
       id-token: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           persist-credentials: false
 
-      - uses: ruby/setup-ruby@v1
+      # Intentionally NOT using bundler-cache on a tag-triggered publish job:
+      # cache poisoning from a long-lived cache key could compromise the
+      # released artifact. The release path is rare; pay the install cost.
+      - uses: ruby/setup-ruby@c4e5b1316158f92e3d49443a9d58b31d25ac0f8f # v1.306.0
         with:
           ruby-version: "3.3"
-          bundler-cache: true
+
+      - run: bundle install
 
       - name: Run tests
         run: bin/test
@@ -35,7 +39,7 @@ jobs:
           gem build kamal-lint.gemspec --output "pkg/kamal-lint-${version}.gem"
           ls -lh pkg/
 
-      - uses: rubygems/configure-rubygems-credentials@v1.0.0
+      - uses: rubygems/configure-rubygems-credentials@bc6dd217f8a4f919d6835fcfefd470ef821f5c44 # v1.0.0
 
       - name: Push gem to RubyGems
         run: |

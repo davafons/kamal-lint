@@ -12,7 +12,7 @@ Gem::Specification.new do |spec|
   spec.description = "Catches cross-section bugs and smells in Kamal's config/deploy.yml that Kamal itself silently allows: undeclared secrets, accessory/role mismatches, registry inconsistencies, and more. Supports auto-fix for safe rewrites and outputs human, JSON, or GitHub Actions formats."
   spec.homepage = "https://github.com/davafons/kamal-lint"
   spec.license = "MIT"
-  spec.required_ruby_version = ">= 3.2.0"
+  spec.required_ruby_version = ">= 3.3.0"
 
   spec.metadata["homepage_uri"] = spec.homepage
   spec.metadata["source_code_uri"] = "#{spec.homepage}/tree/main"
