@@ -32,12 +32,31 @@ jobs:
         run: bin/test
 
       - name: Build gem
+        id: build
         run: |
           set -euo pipefail
           mkdir -p pkg
           version=$(ruby -r ./lib/kamal/lint/version -e 'print Kamal::Lint::VERSION')
           gem build kamal-lint.gemspec --output "pkg/kamal-lint-${version}.gem"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
           ls -lh pkg/
+
+      - name: Extract changelog section
+        id: changelog
+        env:
+          VERSION: ${{ steps.build.outputs.version }}
+        run: |
+          set -euo pipefail
+          body=$(awk -v v="$VERSION" '
+            $0 ~ "^## \\[" v "\\]" { in_section=1; next }
+            in_section && $0 ~ "^## " { exit }
+            in_section { print }
+          ' CHANGELOG.md)
+          {
+            echo "body<<EOF_BODY"
+            echo "$body"
+            echo "EOF_BODY"
+          } >> "$GITHUB_OUTPUT"
 
       - uses: rubygems/configure-rubygems-credentials@762a4b77c3300434bb57c7ce80b20e36231927aa # v2.0.0
 
@@ -57,3 +76,11 @@ jobs:
               fi
             fi
           done
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
+        with:
+          name: v${{ steps.build.outputs.version }}
+          body: ${{ steps.changelog.outputs.body }}
+          files: pkg/*.gem
+          fail_on_unmatched_files: true

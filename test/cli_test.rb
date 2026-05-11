@@ -92,4 +92,21 @@ class CliTest < ActiveSupport::TestCase
       assert_equal 2, status.exitstatus
     end
   end
+
+  def test_clean_run_against_valid_fixture
+    Dir.mktmpdir do |dir|
+      FileUtils.mkdir_p(File.join(dir, "config"))
+      FileUtils.mkdir_p(File.join(dir, ".kamal"))
+      FileUtils.cp(File.join(__dir__, "fixtures/valid_deploy.yml"),
+                   File.join(dir, "config/deploy.yml"))
+      FileUtils.cp(File.join(__dir__, "fixtures/valid_secrets"),
+                   File.join(dir, ".kamal/secrets"))
+      File.write(File.join(dir, ".gitignore"), ".kamal/secrets\n")
+
+      out, _err, status = run_cli("--no-color", "--fail-on", "error", dir: dir)
+      assert_equal 0, status.exitstatus,
+        "expected clean exit on valid fixture; output was:\n#{out}"
+      assert_match(/No issues found/, out)
+    end
+  end
 end

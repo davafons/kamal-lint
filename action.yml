@@ -58,4 +58,11 @@ runs:
         if [ "$KL_FIX" = "true" ]; then
           ARGS+=(--fix)
         fi
-        bundle exec kamal-lint "${ARGS[@]}"
+
+        # Prefer bundler if there's a Gemfile referencing kamal-lint;
+        # fall back to a globally-installed gem otherwise.
+        if [ -f Gemfile ] && bundle list 2>/dev/null | grep -q '^  \* kamal-lint '; then
+          bundle exec kamal-lint "${ARGS[@]}"
+        else
+          kamal-lint "${ARGS[@]}"
+        fi

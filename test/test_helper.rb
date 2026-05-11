@@ -77,7 +77,6 @@ class ActiveSupport::TestCase
       parsed: {},
       base_parsed: {},
       override_parsed: nil,
-      source_lines: [],
       line_index: {},
       secrets: [],
       secrets_path: "",

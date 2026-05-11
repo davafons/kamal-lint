@@ -81,10 +81,6 @@ module Kamal
       def parsed
         context.parsed
       end
-
-      def secrets
-        context.secrets
-      end
     end
   end
 end

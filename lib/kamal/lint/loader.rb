@@ -6,12 +6,7 @@ require "yaml"
 
 module Kamal
   module Lint
-    # Holds all the data a check needs to inspect a single Kamal config:
-    # the parsed YAML, the source lines, helper to look up source lines for a
-    # given path (for finding line numbers), the destination override, the
-    # secrets file contents, and a flag indicating whether Kamal's own loader
-    # rejected the config (in which case some checks are skipped to avoid
-    # cascading false positives).
+    # Holds all the data a check needs to inspect a single Kamal config.
     Context = Struct.new(
       :config_file,
       :destination,
@@ -19,7 +14,6 @@ module Kamal
       :parsed,
       :base_parsed,
       :override_parsed,
-      :source_lines,
       :line_index,
       :secrets,
       :secrets_path,
@@ -51,65 +45,62 @@ module Kamal
       def load(config_file:, destination: nil, kamal_version: nil)
         raise ConfigNotFoundError, "Config file not found: #{config_file}" unless File.exist?(config_file)
 
-        working_dir = Pathname.new(config_file).realpath.dirname.dirname.to_s
-        # If config_file is at config/deploy.yml inside a project, working_dir = project root.
-        # If the user pointed somewhere else, fall back to its parent dir's parent.
-
-        base_text = File.read(config_file)
-        base_parsed = safe_parse_yaml(base_text)
-        source_lines = base_text.lines
-
-        override_parsed = nil
-        if destination
-          override_path = File.join(File.dirname(config_file), "deploy.#{destination}.yml")
-          if File.exist?(override_path)
-            override_parsed = safe_parse_yaml(File.read(override_path))
-            source_lines = File.read(override_path).lines
-          end
-        end
-
-        merged = override_parsed ? deep_merge(base_parsed, override_parsed) : base_parsed
-
-        line_index = build_line_index(base_text)
-        secrets_path = File.join(working_dir, ".kamal", "secrets")
-        gitignore_path = File.join(working_dir, ".gitignore")
-        secrets_keys = SecretsFile.read_keys(secrets_path)
-
-        loaded = true
-        load_error = nil
-        begin
-          # Run Kamal's own loader for parse-level validation. We don't use the
-          # returned object — we keep working off the parsed Hash so we can
-          # report line numbers — but we surface Kamal's own errors as findings.
-          require "kamal"
-          Dir.chdir(working_dir) do
-            Kamal::Configuration.create_from(
-              config_file: Pathname.new(config_file),
-              destination: destination,
-              version: "kamal-lint"
-            )
-          end
-        rescue => e
-          loaded = false
-          load_error = e
-        end
+        working_dir = derive_working_dir(config_file)
+        base_text, base_parsed = read_yaml(config_file)
+        override_parsed = read_override(config_file, destination)
+        kamal_loaded, kamal_load_error = try_kamal_load(config_file, destination, working_dir)
 
         Context.new(
           config_file: config_file,
           destination: destination,
           working_dir: working_dir,
-          parsed: merged || {},
-          base_parsed: base_parsed || {},
+          parsed: override_parsed ? deep_merge(base_parsed, override_parsed) : base_parsed,
+          base_parsed: base_parsed,
           override_parsed: override_parsed,
-          source_lines: source_lines,
-          line_index: line_index,
-          secrets: secrets_keys,
-          secrets_path: secrets_path,
-          gitignore_path: gitignore_path,
+          line_index: build_line_index(base_text),
+          secrets: SecretsFile.read_keys(File.join(working_dir, ".kamal", "secrets")),
+          secrets_path: File.join(working_dir, ".kamal", "secrets"),
+          gitignore_path: File.join(working_dir, ".gitignore"),
           kamal_version: kamal_version || KamalVersion.detect,
-          kamal_loaded: loaded,
-          kamal_load_error: load_error
+          kamal_loaded: kamal_loaded,
+          kamal_load_error: kamal_load_error
         )
+      end
+
+      def derive_working_dir(config_file)
+        Pathname.new(config_file).realpath.dirname.dirname.to_s
+      end
+
+      def read_yaml(path)
+        text = File.read(path)
+        [ text, safe_parse_yaml(text) ]
+      end
+
+      def read_override(config_file, destination)
+        return nil unless destination
+
+        override_path = File.join(File.dirname(config_file), "deploy.#{destination}.yml")
+        return nil unless File.exist?(override_path)
+
+        safe_parse_yaml(File.read(override_path))
+      end
+
+      # Invoke Kamal's own loader so we can capture (and selectively surface)
+      # the errors it would raise at deploy time. The returned config object is
+      # discarded — checks operate on the parsed Hash so they retain source
+      # line numbers.
+      def try_kamal_load(config_file, destination, working_dir)
+        require "kamal"
+        Dir.chdir(working_dir) do
+          Kamal::Configuration.create_from(
+            config_file: Pathname.new(config_file),
+            destination: destination,
+            version: "kamal-lint"
+          )
+        end
+        [ true, nil ]
+      rescue => e
+        [ false, e ]
       end
 
       def safe_parse_yaml(text)
@@ -133,17 +124,16 @@ module Kamal
         result
       end
 
-      # Build a mapping from dot-path ("env.secret") to source line numbers.
-      # Walks the Psych AST.
+      # Build a mapping from dot-path ("env.secret") to source line numbers
+      # by walking the Psych AST.
       def build_line_index(text)
         index = {}
-        stream = Psych.parse_stream(text)
-        stream.children.each do |doc|
+        Psych.parse_stream(text).children.each do |doc|
           walk_node(doc.root, [], index)
         end
         index
       rescue Psych::SyntaxError
-        index
+        index || {}
       end
 
       def walk_node(node, path, index)
@@ -152,22 +142,16 @@ module Kamal
           node.children.each_slice(2) do |key_node, value_node|
             next unless key_node && value_node
 
-            key = key_node.value
-            new_path = path + [ key ]
+            new_path = path + [ key_node.value ]
             index[new_path.join(".")] ||= key_node.start_line + 1
             walk_node(value_node, new_path, index)
           end
         when Psych::Nodes::Sequence
           node.children.each_with_index do |child, idx|
             new_path = path + [ idx.to_s ]
-            # Index the position itself so checks can find sequence elements
-            # by ordinal (e.g. "env.secret.0").
             index[new_path.join(".")] ||= child.start_line + 1
             walk_node(child, new_path, index)
           end
-        when Psych::Nodes::Scalar
-          # Scalars at non-root locations need no further indexing; their
-          # parent already wrote the line for them.
         end
       end
     end
