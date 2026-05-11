@@ -28,32 +28,45 @@ bundle exec kamal-lint
 
 ## Usage
 
-**Run against your config:**
+**Default: lint base + every destination override at once.**
 
 ```bash
 bundle exec kamal-lint
 ```
 
-By default reads `config/deploy.yml`, prints findings, exits `1` if any are at or above the `--fail-on` threshold (default: `warning`), `0` otherwise.
+Auto-discovers `config/deploy.*.yml` files next to your base `config/deploy.yml` and lints each (base alone, then each destination merged onto base). Output groups findings by destination — bugs that live in a `deploy.production.yml` override show up *only* under `[production]`:
 
-**Lint a destination override:**
+```
+[base]       config/deploy.yml
+  ✓ No issues found.
+
+[production] config/deploy.production.yml
+  ⚠ warning  ...
+      `traefik:` block is Kamal 1.x legacy ...
+
+[staging]    config/deploy.staging.yml
+  ✓ No issues found.
+
+Summary: 1 warning across 3 configs
+```
+
+Exits `1` if any findings are at or above `--fail-on` (default: `warning`), `0` otherwise.
+
+**Narrow to a single destination:**
 
 ```bash
 bundle exec kamal-lint -d production
 ```
 
-Loads `config/deploy.yml`, deep-merges `config/deploy.production.yml` on top, then runs every check against the merged config. Catches override-only bugs without running `kamal deploy`.
+Useful in CI matrix jobs or when debugging one destination. Skips auto-discovery; only lints `deploy.yml + deploy.production.yml`.
 
-**Use a different config path:**
-
-```bash
-bundle exec kamal-lint -c infra/deploy.yml
-```
-
-**List all checks (with version applicability):**
+**Other knobs:**
 
 ```bash
-bundle exec kamal-lint list-checks
+bundle exec kamal-lint -c infra/deploy.yml      # non-default config path
+bundle exec kamal-lint list-checks              # show every registered check
+bundle exec kamal-lint --format=json            # machine-readable output
+bundle exec kamal-lint --include-kamal-errors   # also surface Kamal's loader errors
 ```
 
 **In CI:**
@@ -61,17 +74,10 @@ bundle exec kamal-lint list-checks
 ```yaml
 - uses: davafons/kamal-lint@v0.1.0
   with:
-    destination: production
     fail-on: warning
 ```
 
-`--format=github` is set automatically, so findings show as inline annotations on the changed file in the PR view.
-
-**Treat as a JSON tool:**
-
-```bash
-bundle exec kamal-lint --format=json
-```
+`--format=github` is set automatically so findings show as inline annotations in the PR view. By default the action lints all destinations; set `destination: production` to narrow.
 
 ## Checks
 

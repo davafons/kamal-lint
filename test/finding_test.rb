@@ -10,7 +10,7 @@ class FindingTest < ActiveSupport::TestCase
     )
     expected = {
       check: "x", severity: "info", message: "m",
-      file: "f", line: 2, column: 3
+      file: "f", line: 2, column: 3, destination: nil
     }
     assert_equal expected, f.to_h
   end

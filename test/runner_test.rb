@@ -72,4 +72,64 @@ class RunnerTest < ActiveSupport::TestCase
     end
     refute_includes result.findings.map(&:check_id), "kamal-parse-error"
   end
+
+  def test_auto_discovers_destinations_by_default
+    base = <<~YAML
+      service: app
+      image: ghcr.io/x/app
+      servers:
+        - 1.2.3.4
+      builder:
+        arch: amd64
+      registry:
+        server: ghcr.io
+      proxy:
+        host: app.example.com
+        healthcheck:
+          path: /up
+    YAML
+    Dir.mktmpdir("kamal-lint-multi") do |dir|
+      FileUtils.mkdir_p(File.join(dir, "config"))
+      File.write(File.join(dir, "config/deploy.yml"), base)
+      # Production has a real override-only bug: it adds a traefik block.
+      File.write(File.join(dir, "config/deploy.production.yml"), "traefik:\n  ssl_redirect: true\n")
+      # Staging is clean.
+      File.write(File.join(dir, "config/deploy.staging.yml"), "image: ghcr.io/x/app-staging\n")
+      File.write(File.join(dir, ".gitignore"), ".kamal/secrets\n")
+
+      result = Dir.chdir(dir) do
+        Kamal::Lint::Runner.new(
+          config_file: "config/deploy.yml",
+          kamal_version: "2.11.0"
+        ).call
+      end
+
+      assert_equal [ nil, "production", "staging" ], result.destinations
+      traefik = result.findings.find { |f| f.check_id == "traefik-legacy-keys" }
+      assert traefik, "expected traefik-legacy-keys finding"
+      assert_equal "production", traefik.destination
+    end
+  end
+
+  def test_explicit_destination_narrows_to_one
+    base = "service: a\nimage: i\nservers:\n  - 1.2.3.4\n"
+    Dir.mktmpdir("kamal-lint-narrow") do |dir|
+      FileUtils.mkdir_p(File.join(dir, "config"))
+      File.write(File.join(dir, "config/deploy.yml"), base)
+      File.write(File.join(dir, "config/deploy.production.yml"), "image: ghcr.io/x/i\n")
+      File.write(File.join(dir, "config/deploy.staging.yml"), "image: stg/i\n")
+
+      result = Dir.chdir(dir) do
+        Kamal::Lint::Runner.new(
+          config_file: "config/deploy.yml",
+          destination: "production",
+          kamal_version: "2.11.0"
+        ).call
+      end
+
+      assert_equal [ "production" ], result.destinations
+      assert result.findings.all? { |f| f.destination == "production" },
+        "expected every finding tagged production; got #{result.findings.map(&:destination).uniq}"
+    end
+  end
 end

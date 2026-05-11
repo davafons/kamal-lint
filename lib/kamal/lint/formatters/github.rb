@@ -23,7 +23,7 @@ module Kamal
               file: finding.file,
               line: finding.line,
               col: finding.column,
-              title: "kamal-lint: #{finding.check_id}"
+              title: title_for(finding)
             }.compact
 
             attr_str = attrs.map { |k, v| "#{k}=#{escape_property(v.to_s)}" }.join(",")
@@ -33,6 +33,14 @@ module Kamal
         end
 
         private
+
+        def title_for(finding)
+          if finding.destination
+            "kamal-lint [#{finding.destination}]: #{finding.check_id}"
+          else
+            "kamal-lint: #{finding.check_id}"
+          end
+        end
 
         def escape_message(value)
           value.to_s.gsub("%", "%25").gsub("\r", "%0D").gsub("\n", "%0A")

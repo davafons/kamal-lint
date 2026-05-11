@@ -13,9 +13,8 @@ module Kamal
         def render(result)
           payload = {
             kamal_lint_version: Kamal::Lint::VERSION,
-            kamal_version: result.context.kamal_version,
-            file: result.context.file_for_finding,
-            destination: result.context.destination,
+            kamal_version: result.context&.kamal_version,
+            destinations: result.destinations,
             findings: result.findings.map(&:to_h),
             summary: {
               errors: result.errors.size,

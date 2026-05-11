@@ -9,6 +9,7 @@ module Kamal
       :file,
       :line,
       :column,
+      :destination,
       keyword_init: true
     ) do
       def to_h
@@ -18,7 +19,8 @@ module Kamal
           message: message,
           file: file,
           line: line,
-          column: column
+          column: column,
+          destination: destination
         }
       end
     end
