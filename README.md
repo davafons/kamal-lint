@@ -9,21 +9,9 @@
 
 Static linter for [Kamal](https://kamal-deploy.org) `config/deploy.yml`. Catches missing secrets, role/registry mismatches, and proxy footguns that Kamal silently allows.
 
-```
-$ bundle exec kamal-lint
-kamal-lint 0.1.0 · kamal 2.11.0 detected
-  config:      config/deploy.yml
-
-✖ error   config/deploy.yml:9
-    env.secret references `RAILS_MASTER_KEY` but it isn't declared in .kamal/secrets
-    [secret-not-declared]
-
-⚠ warning config/deploy.yml:18 (autofixable)
-    `traefik:` block is Kamal 1.x legacy and is ignored in Kamal 2+; use `proxy:` instead
-    [traefik-legacy-keys]
-
-Summary: 1 error, 1 warning, 1 autofixable
-```
+<p align="center">
+  <img src="docs/preview.svg" alt="kamal-lint output sample" width="760">
+</p>
 
 ## Install
 

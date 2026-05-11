@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 540" font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, 'JetBrains Mono', monospace" font-size="13">
+  <style>
+    .bg { fill: #1d1f21; }
+    .chrome { fill: #2c2e30; }
+    .dim { fill: #6b7280; }
+    .text { fill: #e5e7eb; }
+    .prompt { fill: #50fa7b; }
+    .red { fill: #ff6b6b; }
+    .yellow { fill: #f1c40f; }
+    .blue { fill: #8be9fd; }
+    .cyan { fill: #67e8f9; }
+    .mute { fill: #9ca3af; }
+    .bold { font-weight: 700; }
+  </style>
+
+  <!-- window -->
+  <rect class="bg" x="0" y="0" width="760" height="540" rx="10" />
+  <rect class="chrome" x="0" y="0" width="760" height="28" rx="10" />
+  <rect class="chrome" x="0" y="20" width="760" height="8" />
+  <circle cx="18" cy="14" r="6" fill="#ff5f57" />
+  <circle cx="38" cy="14" r="6" fill="#febc2e" />
+  <circle cx="58" cy="14" r="6" fill="#28c840" />
+  <text x="380" y="18" text-anchor="middle" class="mute" font-size="11">kamal-lint — bash</text>
+
+  <!-- content -->
+  <g transform="translate(20, 56)">
+    <text x="0" y="0">
+      <tspan class="prompt">$</tspan>
+      <tspan class="text"> bundle exec kamal-lint</tspan>
+    </text>
+
+    <text x="0" y="22">
+      <tspan class="text bold">kamal-lint</tspan>
+      <tspan class="dim"> 0.1.0</tspan>
+      <tspan class="text"> · kamal </tspan>
+      <tspan class="cyan">2.11.0</tspan>
+      <tspan class="text"> detected</tspan>
+    </text>
+    <text x="0" y="40" class="text">  config:      config/deploy.yml</text>
+
+    <!-- error finding -->
+    <text x="0" y="78">
+      <tspan class="red">✖</tspan>
+      <tspan class="text bold"> error  </tspan>
+      <tspan class="mute"> config/deploy.yml:9</tspan>
+    </text>
+    <text x="32" y="96" class="text">env.secret references `RAILS_MASTER_KEY` but it isn't declared in .kamal/secrets</text>
+    <text x="32" y="114" class="mute">[secret-not-declared]</text>
+
+    <!-- warning finding -->
+    <text x="0" y="148">
+      <tspan class="yellow">⚠</tspan>
+      <tspan class="text bold"> warning</tspan>
+      <tspan class="mute"> config/deploy.yml:18</tspan>
+      <tspan class="dim"> (autofixable)</tspan>
+    </text>
+    <text x="32" y="166" class="text">`traefik:` block is Kamal 1.x legacy and is ignored in Kamal 2+; use `proxy:` instead</text>
+    <text x="32" y="184" class="mute">[traefik-legacy-keys]</text>
+
+    <!-- error finding -->
+    <text x="0" y="218">
+      <tspan class="red">✖</tspan>
+      <tspan class="text bold"> error  </tspan>
+      <tspan class="mute"> config/deploy.yml:24</tspan>
+    </text>
+    <text x="32" y="236" class="text">accessory `db` references role `bogus` which is not defined under `servers`</text>
+    <text x="32" y="254" class="mute">[accessory-role-undefined]</text>
+
+    <!-- warning finding -->
+    <text x="0" y="288">
+      <tspan class="yellow">⚠</tspan>
+      <tspan class="text bold"> warning</tspan>
+      <tspan class="mute"> config/deploy.yml:31</tspan>
+    </text>
+    <text x="32" y="306" class="text">env.clear contains `API_TOKEN` which looks like a secret; move it to env.secret + .kamal/secrets</text>
+    <text x="32" y="324" class="mute">[secret-in-env-clear]</text>
+
+    <!-- summary -->
+    <text x="0" y="362">
+      <tspan class="text bold">Summary: </tspan>
+      <tspan class="red">2</tspan>
+      <tspan class="text"> errors, </tspan>
+      <tspan class="yellow">2</tspan>
+      <tspan class="text"> warnings, </tspan>
+      <tspan class="dim">1 autofixable</tspan>
+    </text>
+
+    <!-- next prompt -->
+    <text x="0" y="400">
+      <tspan class="prompt">$</tspan>
+      <tspan class="text"> _</tspan>
+    </text>
+  </g>
+</svg>
