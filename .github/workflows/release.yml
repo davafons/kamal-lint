@@ -27,6 +27,9 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
+          # Need history for `gh release --generate-notes` to compute the
+          # delta from the previous tag.
+          fetch-depth: 0
 
       # Intentionally NOT using bundler-cache on a tag-triggered publish job:
       # cache poisoning from a long-lived cache key could compromise the
@@ -49,23 +52,6 @@ jobs:
           gem build kamal-lint.gemspec --output "pkg/kamal-lint-${version}.gem"
           echo "version=${version}" >> "$GITHUB_OUTPUT"
           ls -lh pkg/
-
-      - name: Extract changelog section
-        id: changelog
-        env:
-          VERSION: ${{ steps.build.outputs.version }}
-        run: |
-          set -euo pipefail
-          body=$(awk -v v="$VERSION" '
-            $0 ~ "^## \\[" v "\\]" { in_section=1; next }
-            in_section && $0 ~ "^## " { exit }
-            in_section { print }
-          ' CHANGELOG.md)
-          {
-            echo "body<<EOF_BODY"
-            echo "$body"
-            echo "EOF_BODY"
-          } >> "$GITHUB_OUTPUT"
 
       - uses: rubygems/configure-rubygems-credentials@762a4b77c3300434bb57c7ce80b20e36231927aa # v2.0.0
 
@@ -90,9 +76,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ steps.build.outputs.version }}
-          BODY: ${{ steps.changelog.outputs.body }}
         run: |
           set -euo pipefail
+          # --generate-notes walks the commit/PR history since the previous
+          # tag and produces release notes automatically.
           gh release create "v${VERSION}" pkg/*.gem \
             --title "v${VERSION}" \
-            --notes "$BODY"
+            --generate-notes

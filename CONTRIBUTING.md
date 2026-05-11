@@ -27,23 +27,17 @@ BUNDLE_ONLY=rubocop bundle exec rubocop --parallel
 
 PRs must:
 - pass `bin/test` and rubocop
-- add a test for any new check or autofix
-- update `CHANGELOG.md` under `## [Unreleased]`
+- add a test for any new check
+- have a clear, descriptive title — it becomes the line in the next release's auto-generated notes
 - not increase scope beyond what the issue describes
 
 ### Adding a check
 
-1. Create `lib/kamal/lint/checks/<your_check>.rb` subclassing `Kamal::Lint::Check`. Declare `id`, `severity`, `since`, optional `until_version`, optional `autofixable true`, and a `title`. Implement `#call` returning an array of `Finding`s.
+1. Create `lib/kamal/lint/checks/<your_check>.rb` subclassing `Kamal::Lint::Check`. Declare `id`, `severity`, `since`, optional `until_version`, and a `title`. Implement `#call` returning an array of `Finding`s.
 2. Register it at the bottom of the file: `Lint.registry.register(YourCheck)`
 3. Require it from `lib/kamal/lint.rb`
 4. Add `test/checks/<your_check>_test.rb` covering positive case, negative case, and at least one edge.
-5. Update the check table in `README.md` and the `[Unreleased]` section in `CHANGELOG.md`.
-
-### Adding an autofix
-
-Set `autofixable true` on the check class and implement `apply_fix(ctx)` returning `true` on success / `false` on no-op or failure. Pass `autofix: method(:apply_fix)` when constructing the `Finding`.
-
-Autofixes must be safe under any execution order (other autofixes may run on the same file before or after yours). Prefer parse-and-redump (`YAML.safe_load` then `YAML.dump`) over textual rewrites.
+5. Update the check table in `README.md`.
 
 ## Code style
 
