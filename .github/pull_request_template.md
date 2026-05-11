@@ -6,8 +6,9 @@
 
 - [ ] `bin/test` passes
 - [ ] `BUNDLE_ONLY=rubocop bundle exec rubocop --parallel` clean
-- [ ] CHANGELOG.md updated under `## [Unreleased]`
-- [ ] If a new check or autofix: README check table updated
+- [ ] If a new check: README check table updated
+
+> The PR title becomes the line in the next release's auto-generated notes — keep it descriptive.
 
 ## Notes
 
