@@ -7,6 +7,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Cancel in-flight runs for the same PR/branch; main runs are not cancelled
+# so finished commits keep their CI badge.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
