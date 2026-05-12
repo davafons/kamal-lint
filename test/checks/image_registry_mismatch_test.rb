@@ -3,13 +3,22 @@
 require "test_helper"
 
 class ImageRegistryMismatchTest < ActiveSupport::TestCase
-  def test_flags_mismatch
+  def test_flags_mismatched_host_prefix
+    findings = run_check(
+      Kamal::Lint::Checks::ImageRegistryMismatch,
+      yaml: "image: quay.io/someorg/myapp\nregistry:\n  server: ghcr.io\n"
+    )
+    assert_equal 1, findings.size
+    assert_includes findings.first.message, "ghcr.io"
+  end
+
+  def test_silent_for_unprefixed_image
+    # Canonical Kamal style: `org/repo`, registry server is prepended automatically.
     findings = run_check(
       Kamal::Lint::Checks::ImageRegistryMismatch,
       yaml: "image: someorg/myapp\nregistry:\n  server: ghcr.io\n"
     )
-    assert_equal 1, findings.size
-    assert_includes findings.first.message, "ghcr.io"
+    assert_empty findings
   end
 
   def test_silent_when_aligned
@@ -26,6 +35,14 @@ class ImageRegistryMismatchTest < ActiveSupport::TestCase
       yaml: "image: someorg/myapp\nregistry:\n  username: u\n"
     )
     assert_empty findings
+  end
+
+  def test_flags_localhost_port_prefix_mismatch
+    findings = run_check(
+      Kamal::Lint::Checks::ImageRegistryMismatch,
+      yaml: "image: localhost:5000/myapp\nregistry:\n  server: ghcr.io\n"
+    )
+    assert_equal 1, findings.size
   end
 
   def test_silent_when_server_is_docker_hub

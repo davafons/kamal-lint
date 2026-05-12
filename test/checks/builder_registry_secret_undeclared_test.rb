@@ -38,4 +38,19 @@ class BuilderRegistrySecretUndeclaredTest < ActiveSupport::TestCase
     )
     assert_empty findings
   end
+
+  def test_destination_secrets_are_merged
+    # The base secrets file doesn't declare REGISTRY_PASS, but the
+    # destination-specific .kamal/secrets.prod does — and Kamal sources both
+    # at deploy time, so the linter should too.
+    findings = run_check(
+      Kamal::Lint::Checks::BuilderRegistrySecretUndeclared,
+      yaml: "image: i\nregistry:\n  password:\n    - REGISTRY_PASS\n",
+      destination: "prod",
+      destination_yaml: "service: x\n",
+      secrets: "",
+      destination_secrets: "REGISTRY_PASS=$(some-cmd)\n"
+    )
+    assert_empty findings
+  end
 end

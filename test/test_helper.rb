@@ -25,25 +25,34 @@ class ActiveSupport::TestCase
     File.join(__dir__, "fixtures", *parts)
   end
 
-  def with_project(yaml:, secrets: nil, gitignore: nil, destination_yaml: nil, destination_name: nil)
+  def with_project(yaml:, secrets: nil, gitignore: nil, destination_yaml: nil, destination_name: nil, destination_secrets: nil)
     Dir.mktmpdir("kamal-lint-test") do |dir|
       FileUtils.mkdir_p(File.join(dir, "config"))
       File.write(File.join(dir, "config", "deploy.yml"), yaml)
       if destination_yaml && destination_name
         File.write(File.join(dir, "config", "deploy.#{destination_name}.yml"), destination_yaml)
       end
-      if secrets
+      if secrets || destination_secrets
         FileUtils.mkdir_p(File.join(dir, ".kamal"))
-        File.write(File.join(dir, ".kamal", "secrets"), secrets)
+        File.write(File.join(dir, ".kamal", "secrets"), secrets) if secrets
+        if destination_secrets && destination_name
+          File.write(File.join(dir, ".kamal", "secrets.#{destination_name}"), destination_secrets)
+        end
       end
       File.write(File.join(dir, ".gitignore"), gitignore) if gitignore
       Dir.chdir(dir) { yield dir }
     end
   end
 
-  def run_check(check_class, yaml:, secrets: nil, destination: nil)
+  def run_check(check_class, yaml:, secrets: nil, destination: nil, destination_yaml: nil, destination_secrets: nil)
     findings = nil
-    with_project(yaml: yaml, secrets: secrets) do
+    with_project(
+      yaml: yaml,
+      secrets: secrets,
+      destination_yaml: destination_yaml,
+      destination_secrets: destination_secrets,
+      destination_name: destination
+    ) do
       ctx = Kamal::Lint::Loader.load(
         config_file: "config/deploy.yml",
         destination: destination,
@@ -80,6 +89,7 @@ class ActiveSupport::TestCase
       line_index: {},
       secrets: [],
       secrets_path: "",
+      destination_secrets_path: nil,
       gitignore_path: "",
       kamal_version: "2.11.0",
       kamal_loaded: true,

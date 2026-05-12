@@ -104,7 +104,9 @@ class RunnerTest < ActiveSupport::TestCase
         ).call
       end
 
-      assert_equal [ nil, "production", "staging" ], result.destinations
+      # Bare base is skipped when destinations exist — it'd always trip
+      # "empty-web-role" + similar template-only findings.
+      assert_equal [ "production", "staging" ], result.destinations
       traefik = result.findings.find { |f| f.check_id == "traefik-legacy-keys" }
       assert traefik, "expected traefik-legacy-keys finding"
       assert_equal "production", traefik.destination

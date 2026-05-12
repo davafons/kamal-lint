@@ -29,4 +29,30 @@ class KamalSecretsNotGitignoredTest < ActiveSupport::TestCase
     )
     assert_empty findings
   end
+
+  def test_silent_when_all_values_are_substitutions
+    # Files like Plenty's secrets — every value is a $(cmd) or $VAR expansion,
+    # so committing the file leaks nothing.
+    findings = run_check(
+      Kamal::Lint::Checks::KamalSecretsNotGitignored,
+      yaml: "service: a\nimage: i\n",
+      secrets: <<~SECRETS
+        # comment
+        KAMAL_REGISTRY_PASSWORD=$(gh auth token)
+        RAILS_MASTER_KEY=${RAILS_MASTER_KEY:-$(cat config/master.key)}
+        OTHER=$EXISTING_ENV
+        EMPTY=
+      SECRETS
+    )
+    assert_empty findings
+  end
+
+  def test_flags_quoted_literal
+    findings = run_check(
+      Kamal::Lint::Checks::KamalSecretsNotGitignored,
+      yaml: "service: a\nimage: i\n",
+      secrets: "TOKEN=\"hardcoded-value\"\n"
+    )
+    assert_equal 1, findings.size
+  end
 end

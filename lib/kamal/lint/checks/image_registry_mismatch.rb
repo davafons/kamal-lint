@@ -14,6 +14,9 @@ module Kamal
         # configured registry is Docker Hub under any of its canonical names.
         DOCKER_HUB_HOSTS = %w[docker.io index.docker.io registry.hub.docker.com].freeze
 
+        # A leading path segment is treated as a registry host when it contains
+        # a `.` or `:` (e.g. `ghcr.io`, `localhost:5000`) — Kamal sees that as
+        # a host and won't add the configured server in front of it.
         def call
           image = parsed["image"]
           registry = parsed["registry"] || parsed.dig("builder", "registry") || {}
@@ -23,11 +26,17 @@ module Kamal
           normalized_server = server.sub(%r{/+\z}, "")
           return [] if DOCKER_HUB_HOSTS.include?(normalized_server)
 
-          prefix = "#{normalized_server}/"
-          return [] if image.start_with?(prefix)
+          first_segment = image.split("/", 2).first.to_s
+          looks_like_host = first_segment.include?(".") || first_segment.include?(":")
+
+          # Unprefixed `org/repo` is the canonical Kamal style — the registry
+          # server is prepended automatically. Only flag when the image already
+          # carries a registry host that disagrees with `registry.server`.
+          return [] unless looks_like_host
+          return [] if image.start_with?("#{normalized_server}/")
 
           [ finding(
-            message: "image `#{image}` does not include the configured registry `#{server}`; Kamal will push to the wrong registry",
+            message: "image `#{image}` is prefixed with a registry host that disagrees with `registry.server: #{server}`; Kamal will push to the wrong registry",
             line: context.line_for([ "image" ])
           ) ]
         end

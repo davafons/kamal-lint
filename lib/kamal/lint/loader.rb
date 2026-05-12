@@ -17,6 +17,7 @@ module Kamal
       :line_index,
       :secrets,
       :secrets_path,
+      :destination_secrets_path,
       :gitignore_path,
       :kamal_version,
       :kamal_loaded,
@@ -51,6 +52,11 @@ module Kamal
         override_parsed = read_override(config_file, destination)
         kamal_loaded, kamal_load_error = try_kamal_load(config_file, destination, working_dir)
 
+        base_secrets_path = File.join(working_dir, ".kamal", "secrets")
+        destination_secrets_path = destination && File.join(working_dir, ".kamal", "secrets.#{destination}")
+        secrets = SecretsFile.read_keys(base_secrets_path)
+        secrets |= SecretsFile.read_keys(destination_secrets_path) if destination_secrets_path
+
         Context.new(
           config_file: config_file,
           destination: destination,
@@ -59,8 +65,9 @@ module Kamal
           base_parsed: base_parsed,
           override_parsed: override_parsed,
           line_index: build_line_index(base_text),
-          secrets: SecretsFile.read_keys(File.join(working_dir, ".kamal", "secrets")),
-          secrets_path: File.join(working_dir, ".kamal", "secrets"),
+          secrets: secrets,
+          secrets_path: base_secrets_path,
+          destination_secrets_path: destination_secrets_path,
           gitignore_path: File.join(working_dir, ".gitignore"),
           kamal_version: kamal_version || KamalVersion.detect,
           kamal_loaded: kamal_loaded,

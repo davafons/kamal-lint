@@ -77,12 +77,15 @@ module Kamal
       private
 
       # When a destination is explicitly requested, lint only that one.
-      # Otherwise discover every config/deploy.*.yml override and lint each
-      # alongside the base config (nil represents the base config).
+      # Otherwise discover every config/deploy.*.yml override and lint each.
+      # If destinations exist, the bare base config is skipped — it isn't
+      # meant to be deployed standalone, so checks like `empty-web-role` or
+      # missing-secrets would always fire on the unmerged template.
       def discover_targets
         return [ @destination ] if @destination
 
-        [ nil ] + auto_discover_destinations
+        destinations = auto_discover_destinations
+        destinations.empty? ? [ nil ] : destinations
       end
 
       def auto_discover_destinations
